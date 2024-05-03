@@ -15,6 +15,55 @@ type Quiz struct {
 	answer   string
 }
 
+// sort sorts CSV records into question,answer format
+func sort(records [][]string) ([]Quiz, error) {
+	var data []Quiz
+
+	for _, record := range records {
+		if len(record) != 2 {
+			return nil, fmt.Errorf("invalid question,answer format: %v", record)
+		}
+		quiz := Quiz{
+			question: strings.TrimSpace(record[0]),
+			answer:   strings.TrimSpace(record[1]),
+		}
+		data = append(data, quiz)
+	}
+
+	return data, nil
+}
+
+// askEachQuestion asks a single question
+// returns user input
+func askEachQuestion(question string) string {
+	fmt.Printf("question: %s\n", question)
+
+	reader := bufio.NewReader(os.Stdin)
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		log.Fatal(err)
+	}
+	input = strings.TrimSpace(input)
+	return input
+}
+
+// checkAnswers compares user input and correct answers
+// returns the quiz result
+func checkAnswers(quiz []Quiz) string {
+	correct := 0
+
+	for _, quiz := range quiz {
+		input := askEachQuestion(quiz.question)
+
+		if input == quiz.answer {
+			correct++
+		}
+	}
+
+	result := fmt.Sprintf("You scored %d out of %d\n", correct, len(quiz))
+	return result
+}
+
 func main() {
 	csvFileName := flag.String("csv", "problems.csv", "CSV file containing questions and answers")
 	flag.Parse()
@@ -44,52 +93,4 @@ func main() {
 	// Ask questions and check answers
 	result := checkAnswers(quizzes)
 	fmt.Println(result)
-}
-
-// sort sorts CSV records into Quiz structs
-func sort(records [][]string) ([]Quiz, error) {
-	var data []Quiz
-
-	for _, record := range records {
-		if len(record) != 2 {
-			return nil, fmt.Errorf("invalid record format: %v", record)
-		}
-		quiz := Quiz{
-			question: strings.TrimSpace(record[0]),
-			answer:   strings.TrimSpace(record[1]),
-		}
-		data = append(data, quiz)
-	}
-
-	return data, nil
-}
-
-// askQuestion asks a single question and returns user input
-func askQuestion(question string) string {
-	fmt.Printf("question: %s\n", question)
-
-	reader := bufio.NewReader(os.Stdin)
-	input, err := reader.ReadString('\n')
-	if err != nil {
-		log.Fatal(err)
-	}
-	input = strings.TrimSpace(input)
-	return input
-}
-
-// checkAnswers compares user input and correct answers
-// returns the quiz result
-func checkAnswers(quiz []Quiz) string {
-	correct := 0
-
-	for _, quiz := range quiz {
-		input := askQuestion(quiz.question)
-
-		if input == quiz.answer {
-			correct++
-		}
-	}
-
-	result := fmt.Sprintf("You scored %d out of %d\n", correct, len(quiz))
-	return result
 }
